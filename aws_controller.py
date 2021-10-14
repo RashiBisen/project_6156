@@ -5,7 +5,7 @@ dynamodb =  boto3.resource('dynamodb')
 table = dynamodb.Table('users')
 
 def get_all_users():
-    response = table.query()
+    response = table.scan()
     items = response['Items']
     return items
 
