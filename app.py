@@ -1,25 +1,50 @@
 from flask import Flask, jsonify
 import json
-from flask import request
-import aws_controller
+from flask import request, Response
+from Services.PortalService.portal_svc import portal_svc
 
 app = Flask(__name__)
 
-@app.route('/users', methods=['GET'])
-def get_all_users():
-	return jsonify(aws_controller.get_all_users())
-
-@app.route('/user', methods=['GET', 'PUT'])
-def get_user():
+@app.route('/users', methods=['GET', 'POST'])
+def get_users_all():
     if request.method == 'GET':
-        uni = request.args.get('uni')
-        return jsonify(aws_controller.get_user(uni))
-    else:
-        uni = request.form['uni']
+        template = request.args
+	rsp =  portal_svc.find_student()
+        rsp = json.dumps(rsp, default=str)
+        rsp = Response(rsp, status=200, content_type="application/JSON")
+    elif request.method == 'POST':
         data = request.get_json()
-        aws_controller.update_item(uni, data)
-        return jsonify({'status':'OK'})
+        key = 'uni'
+        if key not in data:
+            rsp =  Response("UNI needs to be specified", status=406)
+        else:
+            # authenticate user with flask_dance
+            res = portal_svc.create_student(data)
+            if res == False:
+                rsp = Response("UNI already present", status =409)
+            else:
+                rsp = Response("Successful", status=200)
+    else:
+        rsp = Response("NOT IMPLEMENTED", status=501)
+    return rsp
 
+@app.route('/users/<uni>', methods=['GET', 'PUT'])
+def get_user(uni):
+    if request.method == 'GET':
+        rsp = portal_svc.find_student({"uni": uni})
+        rsp = json.dumps(rsp, default=str)
+        rsp = Response(rsp, status=200, content_type="application/JSON")
+        
+    elif request.method == 'PUT':
+        data = request.get_json()
+        data.pop('uni', None)
+        rsp = db.update_student(uni, data)
+        if rsp is not None:
+            rsp = Response("UPDATED", status=201, content_type="text/plain")
+        else:
+            rsp = Response("UNPROCESSABLE ENTITY", status=422, content_type="text/plain")
+    else:
+        rsp = Response("NOT IMPLEMENTED", status=501)
 
 if __name__ == "__main__":
 	app.run()
