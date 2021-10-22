@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 import json
 from flask import request, Response
-from Services.PortalService.portal_svc import portal_svc
+from Services.PortalService import portal_svc
 
 app = Flask(__name__)
 
@@ -9,7 +9,7 @@ app = Flask(__name__)
 def get_users_all():
     if request.method == 'GET':
         template = request.args
-	rsp =  portal_svc.find_student()
+        rsp =  portal_svc.find_student()
         rsp = json.dumps(rsp, default=str)
         rsp = Response(rsp, status=200, content_type="application/JSON")
     elif request.method == 'POST':
@@ -31,7 +31,7 @@ def get_users_all():
 @app.route('/users/<uni>', methods=['GET', 'PUT'])
 def get_user(uni):
     if request.method == 'GET':
-        rsp = portal_svc.find_student({"uni": uni})
+        rsp = portal_svc.find_student(uni)
         rsp = json.dumps(rsp, default=str)
         rsp = Response(rsp, status=200, content_type="application/JSON")
         
@@ -45,6 +45,7 @@ def get_user(uni):
             rsp = Response("UNPROCESSABLE ENTITY", status=422, content_type="text/plain")
     else:
         rsp = Response("NOT IMPLEMENTED", status=501)
+    return rsp
 
 if __name__ == "__main__":
 	app.run()

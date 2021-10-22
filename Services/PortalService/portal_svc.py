@@ -1,4 +1,4 @@
-from Services.DataService.dynamodb import dynamodb as db
+from Services.DataService import dynamodb as db
 
 def create_student(data):
     uni = data['uni']

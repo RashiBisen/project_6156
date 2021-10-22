@@ -9,7 +9,7 @@ def get_primary_key(table_name):
     client = boto3.client('dynamodb')
     response = client.describe_table(
         TableName=table_name)
-    keys = response['KeySchema']
+    keys = response['Table']['KeySchema']
     
     primary_key =''
     for key in keys:
@@ -32,8 +32,8 @@ def find_record(uni = None, template = None):
     if uni is not None:
         response = table.query(KeyConditionExpression=Key(key).eq(uni))
         items = response['Items']
-    elif:
-        response.table.scan()
+    else:
+        response = table.scan()
         items = response['Items']
 
     res= []
