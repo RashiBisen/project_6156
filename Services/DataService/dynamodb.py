@@ -1,12 +1,29 @@
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
+from dotenv import dotenv_values
+from create_dynamodb_table import create_users_table
 
-dynamodb =  boto3.resource('dynamodb')
+config = dotenv_values("google_key.env")
+aws_access_key_id=config["AWS_Access_Key_ID"]
+aws_secret_access_key=config["AWS_Secret_Access_Key"]
+region_name=config["region_name"]
+
+dynamodb =  boto3.resource('dynamodb', aws_access_key_id=aws_access_key_id,
+                           aws_secret_access_key=aws_secret_access_key,
+                           region_name=region_name, endpoint_url="http://localhost:8000")
+
+client = boto3.client('dynamodb', aws_access_key_id=aws_access_key_id,
+                      aws_secret_access_key=aws_secret_access_key,
+                      region_name=region_name, endpoint_url="http://localhost:8000")
+
 table_name = 'users'
+existing_tables = client.list_tables()['TableNames']
+if table_name not in existing_tables:
+    create_users_table(dynamodb)
 table = dynamodb.Table(table_name)
 
 def get_primary_key(table_name):
-    client = boto3.client('dynamodb')
+
     response = client.describe_table(
         TableName=table_name)
     keys = response['Table']['KeySchema']
@@ -29,6 +46,7 @@ def create(uni, data):
 
 def find_record(uni = None, template = None):
     key = get_primary_key(table_name)
+    items = []
     if uni is not None:
         response = table.query(KeyConditionExpression=Key(key).eq(uni))
         items = response['Items']
